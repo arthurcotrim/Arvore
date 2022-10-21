@@ -1,17 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-
-namespace Arvore
+﻿namespace Arvore
 {
     public class ArvoreBinaria
     {
         public Node? Raiz { get; set; }
+        private string? Side { get; set; }
 
-        public bool ArvoreBinariaCheia(Node? node)
+        // ÁRVORES
+
+        public bool ArvoreBinariaCheia(Node? node) => Cheia(node); // CHEIA
+        public bool ArvoreBinariaPerfeita(Node? node) => Perfeita(node, VerificaProfundidade(node), 0); // PERFEITA
+        public bool ArvoreBinariaDegenerada(Node? node) => Degenerada(node); // DEGENERADA
+        public bool ArvoreBinariaEnviesada(Node? node)
+        {
+            Side = Inclinacao(node);
+            return Enviesada(node);
+        } // ENVIESADA
+        public bool ArvoreBinariaCompleta(Node? node) => Completa(node, 0, ContarNos(node)); // COMPLETA
+
+        // MÉTODOS
+
+        private bool Cheia(Node? node)
         {
             if (node == null) return true;
 
@@ -21,12 +29,6 @@ namespace Arvore
                 return ArvoreBinariaCheia(node.Esquerdo) && ArvoreBinariaCheia(node.Direito);
 
             return false;
-        }
-
-        public bool ArvoreBinariaPerfeita(Node? node)
-        {
-            int profundidade = VerificaProfundidade(node);
-            return Perfeita(node, profundidade, 0);
         }
 
         private bool Perfeita(Node? node, int? profundidade, int? nivel)
@@ -41,59 +43,48 @@ namespace Arvore
             return Perfeita(node.Esquerdo, profundidade, nivel + 1) && Perfeita(node.Direito, profundidade, nivel + 1);
         }
 
-        public bool ArvoreBinariaDegenerada(Node? node)
-        {
-            int profundidade = VerificaProfundidade(node);
-            return Degenerada(node, profundidade, 0);
-        }
-
-        private bool Degenerada(Node? node, int? profundidade, int? nivel)
+        private bool Degenerada(Node? node)
         {
             if (node == null) return true;
 
-            if (node.Esquerdo != null && node.Direito != null) return false;
-
-            if (profundidade == nivel) return true;
-
-            if (node.Esquerdo != null && node.Direito == null)
-                return Degenerada(node.Esquerdo, profundidade, nivel + 1);
-            else if (node.Esquerdo == null && node.Direito != null)
-                return Degenerada(node.Direito, profundidade, nivel + 1);
-
-            return false;
-        }
-
-        public bool ArvoreBinariaEnviesada(Node? node)
-        {
-            int profundidade = VerificaProfundidade(node);
-            return Enviesada(node, profundidade, 0, "", "");
-        }
-
-        private bool Enviesada(Node? node, int? profundidade, int? nivel, string side1, string side2)
-        {
-            if (node == null) return true;
-
-            if (node.Esquerdo != null && node.Direito != null) return false;
-
-            if (nivel == 0)
+            if (node?.Esquerdo != null)
             {
-                side1 = node.Esquerdo != null ? "esquerdo" : "direito";
-                side2 = node.Esquerdo != null ? "esquerdo" : "direito";
+                if (node.Direito != null) return false;
+                else return Degenerada(node.Esquerdo);
             }
             else
-                side2 = node.Esquerdo != null ? "esquerdo" : "direito";
-
-            if (profundidade == nivel + 1) return true;
-
-            if (side1 != side2) return false;
-
-            if ((node.Esquerdo != null && node.Direito == null) || (node.Esquerdo == null && node.Direito != null))
-                return Enviesada(node.Esquerdo, profundidade, nivel + 1, side1, side2) && Enviesada(node.Direito, profundidade, nivel + 1, side1, side2);
-
-            return false;
+            {
+                if (node?.Direito != null) return Degenerada(node.Direito);
+                else return true;
+            }
         }
 
+        private bool Enviesada(Node? node)
+        {
+            if (node == null) return true;
 
+            if (node.Esquerdo != null && node.Direito != null) return false;
+
+            if (Side == "esquerdo" && node.Direito != null) return false;
+            if (Side == "direito" && node.Esquerdo != null) return false;
+
+            if (node.Esquerdo != null && node.Direito == null) return Enviesada(node.Esquerdo);
+            else if (node.Esquerdo == null && node.Direito != null) return Enviesada(node.Direito);
+
+            return true;
+        }
+
+        private bool Completa(Node? node, int? index, int? nodes_qtd)
+        {
+            if (node == null) return true;
+
+            if (index >= nodes_qtd) return false;
+
+            return Completa(node.Esquerdo, 2 * index + 1, nodes_qtd)
+                && Completa(node.Direito, 2 * index + 2, nodes_qtd);
+        }
+
+        // AUXILIAR
         private int VerificaProfundidade(Node? node)
         {
             int profundidade = 0;
@@ -106,5 +97,15 @@ namespace Arvore
 
             return profundidade;
         }
+
+        private int ContarNos(Node? node)
+        {
+            if (node == null)
+                return (0);
+            return (1 + ContarNos(node.Esquerdo) +
+                        ContarNos(node.Direito));
+        }
+
+        private string Inclinacao(Node? node) => Side = node?.Esquerdo != null ? "esquerdo" : "direito";
     }
 }
